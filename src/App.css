@@ -4,7 +4,19 @@
 
 .App-logo {
   height: 40vmin;
+  -webkit-user-select: none; /* Chrome, Safari, Opera */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Standard syntax */
   pointer-events: none;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+
+.logofont {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 200px;
+  color: #D2CDE7;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -14,7 +26,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #2D2A3E;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
