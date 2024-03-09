@@ -1,6 +1,5 @@
 package bbibig.bbibig.global.oauth2.handler;
 
-import bbibig.bbibig.domain.user.entity.User;
 import bbibig.bbibig.domain.user.repository.UserRepository;
 import bbibig.bbibig.global.oauth2.CustomOAuth2User;
 import bbibig.bbibig.global.security.jwt.JwtService;
@@ -11,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -19,7 +17,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /*
  * 소셜 로그인 성공 시 처리 로직
@@ -29,10 +26,6 @@ import java.util.Optional;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtService jwtService;
-
-    private final UserRepository userRepository;
-
-    private final RedisRefreshTokenService redisRefreshTokenService;
 
     private String access = "";
     private String refresh = "";
@@ -57,7 +50,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private String loginSuccess(HttpServletResponse httpServletResponse, CustomOAuth2User oAuth2User) throws IOException {
         String accessToken = jwtService.createAccessToken(oAuth2User.getSocialType(),oAuth2User.getSocialId());
         String refreshToken = jwtService.createRefreshToken();
-
         httpServletResponse.addHeader(jwtService.getAccessHeader(), accessToken);
         httpServletResponse.addHeader(jwtService.getRefreshHeader(), refreshToken);
 
@@ -66,11 +58,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         access = accessToken;
         refresh = refreshToken;
-
-        Cookie emailCookie = new Cookie("new_social_user_email", oAuth2User.getSocialId());
-        emailCookie.setMaxAge(600);
-        emailCookie.setPath("/");
-        httpServletResponse.addCookie(emailCookie);
 
         // Access Token을 쿠키로 설정
         Cookie accessTokenCookie = new Cookie("Authorization", accessToken);
@@ -88,9 +75,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 //        refreshTokenCookie.setSecure(true);
         httpServletResponse.addCookie(refreshTokenCookie);
 
-        return UriComponentsBuilder.fromUriString("https://j9b305.p.ssafy.io/sociallogin")
-                .queryParam("Authorization", accessToken)
-                .queryParam("Authorization-Refresh", refreshToken)
+        // 로그인 후 이동할 주소
+        return UriComponentsBuilder.fromUriString("http://localhost:3000/login")
                 .build()
                 .toUriString();
     }

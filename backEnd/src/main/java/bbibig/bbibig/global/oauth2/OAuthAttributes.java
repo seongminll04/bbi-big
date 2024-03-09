@@ -1,6 +1,5 @@
 package bbibig.bbibig.global.oauth2;
 
-import bbibig.bbibig.domain.user.entity.User;
 import bbibig.bbibig.domain.user.model.SocialType;
 import bbibig.bbibig.global.oauth2.userinfo.*;
 import lombok.AccessLevel;

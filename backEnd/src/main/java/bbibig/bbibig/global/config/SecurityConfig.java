@@ -1,6 +1,11 @@
 package bbibig.bbibig.global.config;
 
 import bbibig.bbibig.domain.user.repository.UserRepository;
+import bbibig.bbibig.global.login.filter.CustomJsonUsernamePasswordAuthenticationFilter;
+import bbibig.bbibig.global.login.handler.LoginFailureHandler;
+import bbibig.bbibig.global.login.handler.LoginSuccessHandler;
+import bbibig.bbibig.global.login.service.LoginService;
+import bbibig.bbibig.global.security.jwt.JwtAuthenticationFilter;
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginFailureHandler;
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginSuccessHandler;
 import bbibig.bbibig.global.oauth2.service.CustomOAuth2UserService;
@@ -28,6 +33,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final LoginService loginService;
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
@@ -61,12 +68,6 @@ public class SecurityConfig {
             "/favicon.ico",
             "/oauth2/**",
 
-            /* 앱 회원가입, 로그인 */
-            "/api/login",
-
-            /* 앱 닉네임 중복확인 */
-            "/api/nicknameCheck/**",
-
             "/chat/**"
 
 
@@ -91,9 +92,16 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler(oAuth2LoginFailureHandler)
-                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                        .redirectionEndpoint(redirectionEndpointConfig -> redirectionEndpointConfig
+                                .baseUri("/oauth2/*"))
+                        .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)));
 
+        // 스프링 시큐리티 필터 순서 :
+        // LogoutFilter -> JwtAuthenticationProcessingFilter -> CustomJsonUsernamePasswordAuthenticationFilter
+        // 아래 둘 순서 바꾸면 에러
+        httpSecurity.addFilterAfter(customJsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class);
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), CustomJsonUsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
 
@@ -115,4 +123,51 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
+    /*
+     * AuthenticationManager 설정 후 등록
+     * */
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setUserDetailsService(loginService);
+
+        return new ProviderManager(daoAuthenticationProvider);
+    }
+
+    /*
+     * 로그인 성공 시 호출
+     * */
+    @Bean
+    public LoginSuccessHandler loginSuccessHandler() {
+        return new LoginSuccessHandler(jwtService, userRepository, redisRefreshTokenService);
+    }
+
+    /*
+     * 로그인 실패 시 호출
+     * */
+    @Bean
+    public LoginFailureHandler loginFailureHandler() {
+        return new LoginFailureHandler();
+    }
+
+    @Bean
+    public CustomJsonUsernamePasswordAuthenticationFilter customJsonUsernamePasswordAuthenticationFilter() {
+        CustomJsonUsernamePasswordAuthenticationFilter customJsonUsernamePasswordAuthenticationFilter
+                = new CustomJsonUsernamePasswordAuthenticationFilter(objectMapper);
+
+        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationSuccessHandler(loginSuccessHandler());
+        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationFailureHandler(loginFailureHandler());
+
+        return customJsonUsernamePasswordAuthenticationFilter;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userRepository, redisRefreshTokenService);
+
+        return jwtAuthenticationFilter;
+    }
 }

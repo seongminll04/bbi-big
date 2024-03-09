@@ -1,21 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
-
-import logo from './assets/images/logo.png'
+import { Route, Routes } from "react-router-dom";
+import Login from './pages/login';
+import Home from './pages/home';
 
 function App() {
+  const [width, setwidth] = useState(window.innerWidth)
+  const [height, setheight] = useState(window.innerHeight)
+
+  useEffect(()=>{
+    window.addEventListener('resize', function() {
+      setwidth(window.innerWidth);
+      setheight(window.innerHeight);
+    });
+  })
+
   return (
-    <div className="App">
-      <header className="App-header">
-
-        <div style={{display:'flex', justifyContent:'center', alignItems:'center'}}>
-          <img src={logo} className="App-logo" alt="logo" />
-          <p className='logofont'>bbi-big</p>
-        </div>
-
-
-
-      </header>
+    <div className='App' style={{width:width, height:height}}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
     </div>
   );
 }

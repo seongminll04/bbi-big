@@ -4,18 +4,19 @@ import bbibig.bbibig.domain.user.entity.User;
 import bbibig.bbibig.domain.user.model.SocialType;
 import bbibig.bbibig.domain.user.repository.UserRepository;
 import bbibig.bbibig.global.oauth2.OAuthAttributes;
+import bbibig.bbibig.global.oauth2.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -45,12 +46,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthAttributes oAuthAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
 
         // 소셜 정보로 유저정보 조회
-        User loadUser = getUser(oAuthAttributes, socialType);
+        User loadUser = getUser(Objects.requireNonNull(oAuthAttributes), socialType);
 
-        return new DefaultOAuth2User(
+        return new CustomOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(loadUser.getSocialId())),
                 attributes,
-                oAuthAttributes.getNameAttributeKey());
+                oAuthAttributes.getNameAttributeKey(),
+                loadUser.getSocialId(),
+                loadUser.getSocialType()
+        );
     }
 
     private SocialType getSocialType(String registrationId) {

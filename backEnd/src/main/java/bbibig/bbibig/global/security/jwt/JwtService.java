@@ -6,6 +6,7 @@ import bbibig.bbibig.global.security.redis.RedisAccessTokenService;
 import bbibig.bbibig.global.security.redis.RedisRefreshTokenService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,9 @@ import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 @Service
@@ -134,6 +138,9 @@ public class JwtService {
      */
     public Optional<String> extractAccessToken(HttpServletRequest httpServletRequest) {
 
+//        쿠키에서 accesstoken 추출가능한지 테스트
+//        Cookie[] cookies = httpServletRequest.getCookies();
+//        System.out.println(Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(accessHeader)).findFirst().map(cookie -> cookie.getName() + "=" + cookie.getValue()));
         return Optional.ofNullable(httpServletRequest.getHeader(accessHeader))
                 .filter(accessToken -> accessToken.startsWith(BEARER))
                 .map(accessToken -> accessToken.replace(BEARER, ""));
