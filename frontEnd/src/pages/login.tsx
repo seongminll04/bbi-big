@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styles from './login.module.css';
 
 import logo from '../assets/images/logo with name.png';
@@ -12,15 +12,6 @@ function Login() {
         window.location.href = `http://localhost:8081/oauth2/authorization/${social}`
     }
 
-    useEffect(()=>{
-        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-
-        cookies.forEach(cookie => {
-          const [a, b] = cookie.split('=');
-          console.log(a,b);
-          localStorage.setItem(a,b)
-        })
-    })
     return (
         <div className={styles.container}>
             <header className={styles.logo_container}>
