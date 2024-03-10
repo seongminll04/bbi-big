@@ -19,8 +19,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -37,7 +35,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // 제외해야하는 api 요청 (일반 로그인_웹)
+    // 제외해야하는 api 요청 (로그인_웹)
 
     private final JwtService jwtService;
 
@@ -51,11 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         // token 검증이 필요없는 요청일 때
-        if(httpServletRequest.getRequestURI().equals("/api/member/login") ||
-                httpServletRequest.getRequestURI().equals("/api/web/login") ||
-                httpServletRequest.getRequestURI().equals("/api/web/signup") ||
-                httpServletRequest.getRequestURI().contains("/api/member/nicknameCheck") ||
-                httpServletRequest.getRequestURI().contains("/api/web/idCheck")) {
+        if(httpServletRequest.getRequestURI().equals("/api/member/login")) {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
 
             // 더 이상 필터를 진행하지 않고 return!
@@ -63,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 검증이 필요한 요청은 진행
-
         if(httpServletRequest.getRequestURI().equals("/api/refresh")) {
             // 요청 헤더에서 RefreshToken 추출 - 없거나 유효하지 않으면 null 반환
             String refreshToken = jwtService.extractRefreshToken(httpServletRequest)
@@ -132,7 +125,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .ifPresent(accessToken -> {
                     if (jwtService.isTokenValid(accessToken)) {
                         // AccessToken이 유효한 경우 id(Claim) 추출
-                        jwtService.extractEmail(accessToken)
+                        jwtService.extractId(accessToken)
                                 .ifPresent(id ->{
                                         String[] parts = id.split("@");
 
@@ -152,6 +145,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 필터에서의 처리를 마치고 다음 필터 또는 서블릿으로 요청을 전달하는 역할, 필터 체인의 다음 단계에서 추가적인 처리가 가능
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
+
     /**
      * 인증 허가 메서드
      * Parameter의 User : 우리가 만든 User 객체
@@ -160,8 +154,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public void saveAuthentication(User myUser) {
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(myUser.getSocialId())
-//                .password(String.valueOf(myUser.getSocialType()))
+                .username(myUser.getSocialType()+"@"+myUser.getSocialId())
+                .password(String.valueOf(myUser.getSocialType()))
                 .build();
 
         // 인증 객체 생성

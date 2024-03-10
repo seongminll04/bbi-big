@@ -1,31 +1,17 @@
 package bbibig.bbibig.global.config;
 
-import bbibig.bbibig.domain.user.repository.UserRepository;
-import bbibig.bbibig.global.login.filter.CustomJsonUsernamePasswordAuthenticationFilter;
-import bbibig.bbibig.global.login.handler.LoginFailureHandler;
-import bbibig.bbibig.global.login.handler.LoginSuccessHandler;
-import bbibig.bbibig.global.login.service.LoginService;
-import bbibig.bbibig.global.security.jwt.JwtAuthenticationFilter;
+
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginFailureHandler;
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginSuccessHandler;
 import bbibig.bbibig.global.oauth2.service.CustomOAuth2UserService;
-import bbibig.bbibig.global.security.jwt.JwtService;
-import bbibig.bbibig.global.security.redis.RedisRefreshTokenService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,21 +20,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final LoginService loginService;
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     private final CustomOAuth2UserService customOAuth2UserService;
-
-    private final JwtService jwtService;
-
-    private final RedisRefreshTokenService redisRefreshTokenService;
-
-    private final UserRepository userRepository;
-
-    private final ObjectMapper objectMapper;
 
     private static final String[] WHITE_LIST = {
             /* swagger v2 */
@@ -97,11 +74,6 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)));
 
-        // 스프링 시큐리티 필터 순서 :
-        // LogoutFilter -> JwtAuthenticationProcessingFilter -> CustomJsonUsernamePasswordAuthenticationFilter
-        // 아래 둘 순서 바꾸면 에러
-        httpSecurity.addFilterAfter(customJsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class);
-        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), CustomJsonUsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
 
@@ -118,56 +90,5 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
 
-    /*
-     * AuthenticationManager 설정 후 등록
-     * */
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        daoAuthenticationProvider.setUserDetailsService(loginService);
-
-        return new ProviderManager(daoAuthenticationProvider);
-    }
-
-    /*
-     * 로그인 성공 시 호출
-     * */
-    @Bean
-    public LoginSuccessHandler loginSuccessHandler() {
-        return new LoginSuccessHandler(jwtService, userRepository, redisRefreshTokenService);
-    }
-
-    /*
-     * 로그인 실패 시 호출
-     * */
-    @Bean
-    public LoginFailureHandler loginFailureHandler() {
-        return new LoginFailureHandler();
-    }
-
-    @Bean
-    public CustomJsonUsernamePasswordAuthenticationFilter customJsonUsernamePasswordAuthenticationFilter() {
-        CustomJsonUsernamePasswordAuthenticationFilter customJsonUsernamePasswordAuthenticationFilter
-                = new CustomJsonUsernamePasswordAuthenticationFilter(objectMapper);
-
-        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationManager(authenticationManager());
-        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationSuccessHandler(loginSuccessHandler());
-        customJsonUsernamePasswordAuthenticationFilter.setAuthenticationFailureHandler(loginFailureHandler());
-
-        return customJsonUsernamePasswordAuthenticationFilter;
-    }
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userRepository, redisRefreshTokenService);
-
-        return jwtAuthenticationFilter;
-    }
 }

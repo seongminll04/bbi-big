@@ -36,10 +36,10 @@ public class JwtService {
     private Long refreshTokenExpirationPeriod;
 
     @Value("${jwt.access.header}")
-    private String accessHeader;
+    private String accessTokenName;
 
     @Value("${jwt.refresh.header}")
-    private String refreshHeader;
+    private String refreshTokenName;
 
     private final RedisAccessTokenService redisAccessTokenService;
 
@@ -112,14 +112,28 @@ public class JwtService {
      * AccessToken 헤더 설정
      */
     public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
-        response.setHeader(accessHeader, accessToken);
+        // Access Token을 쿠키로 설정
+        Cookie accessTokenCookie = new Cookie(accessTokenName, accessToken);
+        accessTokenCookie.setMaxAge(3600); // 1시간 유효한 쿠키로 설정
+        accessTokenCookie.setPath("/"); // 모든 경로에서 접근 가능하도록 설정
+//        accessTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
+//        accessTokenCookie.setSecure(true); // HTTPS를 사용할 경우에만 전송되도록 설정
+        response.addCookie(accessTokenCookie);
+
     }
 
     /**
      * RefreshToken 헤더 설정
      */
     public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
-        response.setHeader(refreshHeader, refreshToken);
+        // Refresh Token을 쿠키로 설정 (위와 동일한 방식으로 쿠키 생성)
+        Cookie refreshTokenCookie = new Cookie(refreshTokenName, refreshToken);
+        refreshTokenCookie.setMaxAge(1209600); // 24시간 유효한 쿠키로 설정
+        refreshTokenCookie.setPath("/");
+//        refreshTokenCookie.setHttpOnly(true);
+//        refreshTokenCookie.setSecure(true);
+        response.addCookie(refreshTokenCookie);
+
     }
 
     /**
@@ -128,7 +142,7 @@ public class JwtService {
      */
     public Optional<String> extractRefreshToken(HttpServletRequest httpServletRequest) {
 
-        return Optional.ofNullable(httpServletRequest.getHeader(refreshHeader))
+        return Optional.ofNullable(httpServletRequest.getHeader(refreshTokenName))
                 .filter(refreshToken -> refreshToken.startsWith(BEARER))
                 .map(refreshToken -> refreshToken.replace(BEARER, ""));
     }
@@ -140,17 +154,24 @@ public class JwtService {
 
 //        쿠키에서 accesstoken 추출가능한지 테스트
 //        Cookie[] cookies = httpServletRequest.getCookies();
-//        System.out.println(Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(accessHeader)).findFirst().map(cookie -> cookie.getName() + "=" + cookie.getValue()));
-        return Optional.ofNullable(httpServletRequest.getHeader(accessHeader))
-                .filter(accessToken -> accessToken.startsWith(BEARER))
-                .map(accessToken -> accessToken.replace(BEARER, ""));
+//        System.out.println(Arrays.stream(httpServletRequest.getCookies()).filter(cookie -> cookie.getName().equals(accessHeader)).findFirst().map(cookie -> cookie.getName() + "=" + cookie.getValue()));
+        Cookie[] cookies = httpServletRequest.getCookies();
+
+        return Arrays.stream(cookies)
+                        .filter(cookie -> cookie.getName().equals(accessTokenName))
+                        .findFirst().map(Cookie::getValue);
+
+
+//        return Optional.ofNullable(httpServletRequest.getHeader(accessHeader))
+//                .filter(accessToken -> accessToken.startsWith(BEARER))
+//                .map(accessToken -> accessToken.replace(BEARER, ""));
     }
 
 
     /**
      * AccessToken에서 Email 추출
      */
-    public Optional<String> extractEmail(String accessToken) {
+    public Optional<String> extractId(String accessToken) {
         try {
             return Optional.ofNullable(JWT.require(Algorithm.HMAC512(secretKey)) // Token 유효성 검증
                     .build() // JWT verifier 생성
