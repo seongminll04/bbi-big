@@ -1,9 +1,13 @@
 package bbibig.bbibig.global.config;
 
 
+import bbibig.bbibig.domain.user.repository.UserRepository;
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginFailureHandler;
 import bbibig.bbibig.global.oauth2.handler.OAuth2LoginSuccessHandler;
 import bbibig.bbibig.global.oauth2.service.CustomOAuth2UserService;
+import bbibig.bbibig.global.security.jwt.JwtAuthenticationFilter;
+import bbibig.bbibig.global.security.jwt.JwtService;
+import bbibig.bbibig.global.security.redis.RedisRefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +16,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -26,6 +32,12 @@ public class SecurityConfig {
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    private final JwtService jwtService;
+
+    private final UserRepository userRepository;
+
+    private final RedisRefreshTokenService redisRefreshTokenService;
 
     private static final String[] WHITE_LIST = {
             /* swagger v2 */
@@ -44,8 +56,7 @@ public class SecurityConfig {
             "/",
             "/favicon.ico",
             "/oauth2/**",
-
-            "/chat/**"
+            "/api/logout"
 
 
     };
@@ -74,6 +85,11 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)));
 
+        // 스프링 시큐리티 필터 순서 :
+        // LogoutFilter -> JwtAuthenticationProcessingFilter -> CustomJsonUsernamePasswordAuthenticationFilter
+        // 아래 둘 순서 바꾸면 에러
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 
@@ -89,6 +105,10 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userRepository, redisRefreshTokenService);
 
-
+        return jwtAuthenticationFilter;
+    }
 }

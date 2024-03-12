@@ -5,6 +5,7 @@ import bbibig.bbibig.domain.user.entity.User;
 import bbibig.bbibig.domain.user.model.SocialType;
 import bbibig.bbibig.domain.user.repository.UserRepository;
 import bbibig.bbibig.global.security.redis.RedisRefreshTokenService;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -119,7 +120,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public void checkAccessTokenAndAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                                   FilterChain filterChain)
             throws ServletException, IOException {
-
         // AccessToken 추출
         jwtService.extractAccessToken(httpServletRequest)
                 .ifPresent(accessToken -> {
@@ -131,17 +131,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                                         SocialType socialType = SocialType.valueOf(parts[0]);
                                         String socialId = parts[1];
+                                    Optional<User> user = userRepository.findBySocialIdAndSocialType(socialId, socialType);
 
-                                        userRepository.findBySocialIdAndSocialType(socialId,socialType)
-                                                .ifPresent(this::saveAuthentication); // 인증 처리
+                                    if (user.isPresent()) {
+                                        saveAuthentication(user.get());
+                                    }
+                                    else {
+                                        deleteAccessTokenCookie(httpServletResponse);
+                                        throw new RuntimeException("해당 토큰은 유효하지 않습니다.");
+                                    }
                                 });
                     } else {
                         // AccessToken이 유효하지 않은 경우, 예외를 던집니다.
+                        deleteAccessTokenCookie(httpServletResponse);
                         throw new RuntimeException("해당 토큰은 유효하지 않습니다.");
                     }
                 });
 
-
+        ;
         // 필터에서의 처리를 마치고 다음 필터 또는 서블릿으로 요청을 전달하는 역할, 필터 체인의 다음 단계에서 추가적인 처리가 가능
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
@@ -151,11 +158,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Parameter의 User : 우리가 만든 User 객체
      * Builder의 User : UserDetails의 User 객체
      */
-    public void saveAuthentication(User myUser) {
+    public void saveAuthentication(User user) {
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(myUser.getSocialType()+"@"+myUser.getSocialId())
-                .password(String.valueOf(myUser.getSocialType()))
+                .username(user.getSocialId())
+                .password(String.valueOf(user.getSocialType()))
                 .build();
 
         // 인증 객체 생성
@@ -170,5 +177,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // SecurityContext를 꺼낸 후 setAuthentication()을 이용하여 Authentication 인증 객체 인증 허가 처리
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+    private void deleteAccessTokenCookie(HttpServletResponse httpServletResponse) {
+//        Cookie access = new Cookie(jwtService.getAccessTokenName(),null);
+//        access.setMaxAge(0);
+//        Cookie refresh = new Cookie(jwtService.getRefreshTokenName(),null);
+//        refresh.setMaxAge(0);
+//        httpServletResponse.addCookie(access);
+//        httpServletResponse.addCookie(refresh);
     }
 }
