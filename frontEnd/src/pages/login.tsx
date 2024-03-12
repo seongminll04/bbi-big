@@ -7,7 +7,6 @@ import naver_logo from '../assets/images/naver_logo.png';
 import google_logo from '../assets/images/google_logo.png';
 
 function Login() {
-    
     const login = (social:string) => {
         window.location.href = `http://localhost:8081/oauth2/authorization/${social}`
     }
