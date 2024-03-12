@@ -1,0 +1,54 @@
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.side_container {
+    background-color: #3E3A5A;
+    width:20%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.listswap {
+    width: 100%;
+    height: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.swap {
+    width: 80%;
+    border-radius: 1rem;
+    background-color: #7F7B98;
+    color:white;
+    font-size: 30px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.listbox {
+    height:80%;
+}
+
+.myprofile {
+    height:10%;
+
+    background-color: red;
+}
+.drag {
+    /* 드래그 금지 css */
+    -webkit-user-select: none; /* Chrome, Safari, Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* CSS3 */
+}
+
+.main_container {
+    width:80%;
+}
