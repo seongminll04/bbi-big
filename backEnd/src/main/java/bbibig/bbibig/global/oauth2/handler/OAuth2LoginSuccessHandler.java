@@ -61,7 +61,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
 
         // 로그인 후 이동할 주소
-        return UriComponentsBuilder.fromUriString("http://localhost:3000/login")
+        return UriComponentsBuilder.fromUriString("http://localhost:3000/")
                 .build()
                 .toUriString();
     }

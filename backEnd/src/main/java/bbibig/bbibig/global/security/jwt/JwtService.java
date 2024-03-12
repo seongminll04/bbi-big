@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
@@ -91,10 +90,10 @@ public class JwtService {
     /**
      * AccessToken Header에 실어 보내기
      */
-    public void sendAccessToken(HttpServletResponse httpServletResponse, String accessToken) {
+    public void sendAccessCookie(HttpServletResponse httpServletResponse, String accessToken) {
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
-        setAccessTokenHeader(httpServletResponse, accessToken);
+        setAccessTokenCookie(httpServletResponse, accessToken);
     }
 
     /**
@@ -104,72 +103,66 @@ public class JwtService {
                                           String accessToken, String refreshToken) {
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
-        setAccessTokenHeader(httpServletResponse, accessToken);
-        setRefreshTokenHeader(httpServletResponse, refreshToken);
+        setAccessTokenCookie(httpServletResponse, accessToken);
+        setRefreshTokenCookie(httpServletResponse, refreshToken);
     }
 
     /**
-     * AccessToken 헤더 설정
+     * AccessToken Cookie 설정
      */
-    public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
+    public void setAccessTokenCookie(HttpServletResponse response, String accessToken) {
         // Access Token을 쿠키로 설정
         Cookie accessTokenCookie = new Cookie(accessTokenName, accessToken);
         accessTokenCookie.setMaxAge(3600); // 1시간 유효한 쿠키로 설정
         accessTokenCookie.setPath("/"); // 모든 경로에서 접근 가능하도록 설정
-//        accessTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
+        accessTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
 //        accessTokenCookie.setSecure(true); // HTTPS를 사용할 경우에만 전송되도록 설정
+
         response.addCookie(accessTokenCookie);
 
     }
 
     /**
-     * RefreshToken 헤더 설정
+     * RefreshToken Cookie 설정
      */
-    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         // Refresh Token을 쿠키로 설정 (위와 동일한 방식으로 쿠키 생성)
         Cookie refreshTokenCookie = new Cookie(refreshTokenName, refreshToken);
         refreshTokenCookie.setMaxAge(1209600); // 24시간 유효한 쿠키로 설정
-        refreshTokenCookie.setPath("/");
-//        refreshTokenCookie.setHttpOnly(true);
-//        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setPath("/"); // 모든 경로에서 접근 가능하도록 설정
+        refreshTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
+//        refreshTokenCookie.setSecure(true); // HTTPS를 사용할 경우에만 전송되도록 설정
+
         response.addCookie(refreshTokenCookie);
 
     }
 
     /**
-     * Header에서 RefreshToken 추출
-     * Bearer를 제외하고 순수 토큰만 가져오기 위해서 BEARER 제거
+     * Cookie에서 RefreshToken 추출
      */
     public Optional<String> extractRefreshToken(HttpServletRequest httpServletRequest) {
 
-        return Optional.ofNullable(httpServletRequest.getHeader(refreshTokenName))
-                .filter(refreshToken -> refreshToken.startsWith(BEARER))
-                .map(refreshToken -> refreshToken.replace(BEARER, ""));
+        Cookie[] cookies = httpServletRequest.getCookies();
+
+        return Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(refreshTokenName))
+                .findFirst().map(Cookie::getValue);
     }
 
     /**
-     * Header에서 AccessToken 추출
+     * Cookie에서 AccessToken 추출
      */
     public Optional<String> extractAccessToken(HttpServletRequest httpServletRequest) {
 
-//        쿠키에서 accesstoken 추출가능한지 테스트
-//        Cookie[] cookies = httpServletRequest.getCookies();
-//        System.out.println(Arrays.stream(httpServletRequest.getCookies()).filter(cookie -> cookie.getName().equals(accessHeader)).findFirst().map(cookie -> cookie.getName() + "=" + cookie.getValue()));
         Cookie[] cookies = httpServletRequest.getCookies();
 
         return Arrays.stream(cookies)
                         .filter(cookie -> cookie.getName().equals(accessTokenName))
                         .findFirst().map(Cookie::getValue);
-
-
-//        return Optional.ofNullable(httpServletRequest.getHeader(accessHeader))
-//                .filter(accessToken -> accessToken.startsWith(BEARER))
-//                .map(accessToken -> accessToken.replace(BEARER, ""));
     }
 
-
     /**
-     * AccessToken에서 Email 추출
+     * AccessToken으로 Id 추출
      */
     public Optional<String> extractId(String accessToken) {
         try {
