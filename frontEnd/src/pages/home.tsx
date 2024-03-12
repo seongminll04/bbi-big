@@ -6,6 +6,7 @@ import axios from 'axios';
 import { setLogin } from '../store/actions';
 import styles from './home.module.css';
 import { CgArrowsExchangeAlt } from "react-icons/cg";
+import { IoIosOptions } from "react-icons/io";
 
 function Home() {
   const isLogin = useSelector((state: AppState) => state.isLogin);
@@ -30,6 +31,7 @@ function Home() {
         withCredentials: true
       }).then(res => {
         dispatch(setLogin(res.data));
+        console.log(res.data);
       }).catch(() => {
         navigate('/login');
       })
@@ -50,7 +52,13 @@ function Home() {
 
         </div>
         <div className={styles.myprofile}>
-
+          <img src={isLogin?.profileImg ? isLogin?.profileImg : ''} alt="" className={styles.profileImg} />
+          <div className={styles.nickname}>
+            <p style={{margin:0}}>1234</p>
+            <p style={{margin:0}}>adfs</p>
+            <span>asdf</span>
+          </div>
+          <IoIosOptions className={styles.settingIcon} />
         </div>
       </div>
       <main className={styles.main_container}>

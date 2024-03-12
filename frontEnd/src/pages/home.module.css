@@ -38,9 +38,35 @@
 
 .myprofile {
     height:10%;
-
-    background-color: red;
+    width: 100%;
+    background-color: #5D5674;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 5%;
+    box-sizing: border-box;
+    color: #FEFEFE;
 }
+
+.profileImg {
+    border-radius: 50% ;
+    width: 25%;
+}
+
+.nickname {
+    width: 60%;
+    text-align: start;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.settingIcon {
+    width: 15%;
+    height: 100%;
+}
+
 .drag {
     /* 드래그 금지 css */
     -webkit-user-select: none; /* Chrome, Safari, Opera */

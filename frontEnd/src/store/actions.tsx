@@ -1,7 +1,7 @@
 export const setLogin = (value: 
     {
         nickname: string|null;
-        profile: string|null;
+        profileImg: string|null;
     } | null) => ({
     type: "SET_LOGIN",
     payload: value,
