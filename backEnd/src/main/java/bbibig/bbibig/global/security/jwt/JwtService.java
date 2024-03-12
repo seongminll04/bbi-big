@@ -138,15 +138,38 @@ public class JwtService {
     }
 
     /**
+     * Cookie 삭제
+     */
+    public void deleteCookie(HttpServletResponse response) {
+        // Access Token을 쿠키로 설정
+        Cookie accessTokenCookie = new Cookie(accessTokenName,null);
+        accessTokenCookie.setMaxAge(0); // 1시간 유효한 쿠키로 설정
+        accessTokenCookie.setPath("/"); // 모든 경로에서 접근 가능하도록 설정
+        accessTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
+//        accessTokenCookie.setSecure(true); // HTTPS를 사용할 경우에만 전송되도록 설정
+
+        // Refresh Token을 쿠키로 설정 (위와 동일한 방식으로 쿠키 생성)
+        Cookie refreshTokenCookie = new Cookie(refreshTokenName, null);
+        refreshTokenCookie.setMaxAge(0); // 24시간 유효한 쿠키로 설정
+        refreshTokenCookie.setPath("/"); // 모든 경로에서 접근 가능하도록 설정
+        refreshTokenCookie.setHttpOnly(true); // JavaScript로 접근을 막기 위해 HttpOnly 설정
+//        refreshTokenCookie.setSecure(true); // HTTPS를 사용할 경우에만 전송되도록 설정
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+
+    }
+
+    /**
      * Cookie에서 RefreshToken 추출
      */
     public Optional<String> extractRefreshToken(HttpServletRequest httpServletRequest) {
 
         Cookie[] cookies = httpServletRequest.getCookies();
+        String RefreshToken = Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(refreshTokenName))
+                .findFirst().map(Cookie::getValue).orElse(null);
 
-        return Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(refreshTokenName))
-                .findFirst().map(Cookie::getValue);
+        return Optional.ofNullable(RefreshToken);
     }
 
     /**
@@ -155,10 +178,10 @@ public class JwtService {
     public Optional<String> extractAccessToken(HttpServletRequest httpServletRequest) {
 
         Cookie[] cookies = httpServletRequest.getCookies();
+        String AccessToken = Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(accessTokenName))
+                .findFirst().map(Cookie::getValue).orElse(null);
 
-        return Arrays.stream(cookies)
-                        .filter(cookie -> cookie.getName().equals(accessTokenName))
-                        .findFirst().map(Cookie::getValue);
+        return Optional.ofNullable(AccessToken);
     }
 
     /**

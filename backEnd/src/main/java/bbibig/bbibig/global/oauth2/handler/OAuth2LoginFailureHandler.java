@@ -1,6 +1,5 @@
 package bbibig.bbibig.global.oauth2.handler;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -17,9 +16,12 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
-                                        AuthenticationException exception) throws IOException, ServletException {
+                                        AuthenticationException exception) throws IOException {
 
-        httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        httpServletResponse.getWriter().write("소셜 로그인 실패!");
+//        httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//        httpServletResponse.setCharacterEncoding("UTF-8");
+//        httpServletResponse.setContentType("text/plain;charset=UTF-8");
+//        httpServletResponse.getWriter().write("소셜 로그인 실패!");
+        httpServletResponse.sendRedirect("http://localhost:3000/login");
     }
 }

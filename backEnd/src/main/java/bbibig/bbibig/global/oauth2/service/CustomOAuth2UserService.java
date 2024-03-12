@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;
 
@@ -28,7 +29,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         // loadUser : 소셜 로그인 API의 사용자 정보 제공 URI로 요청
         // => 사용자 정보를 얻은 후 객체 반환
-        OAuth2User oAuth2User = super.loadUser(userRequest);
+        OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService = new DefaultOAuth2UserService();
+        OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest);
 
         // userRequest에서 registrationId 추출 후 SocialType 저장
         // socialType 'naver', 'kakao', 'google' 값이 들어올 수 있음
@@ -46,8 +48,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthAttributes oAuthAttributes = OAuthAttributes.of(socialType, userNameAttributeName, attributes);
 
         // 소셜 정보로 유저정보 조회
-        User loadUser = getUser(Objects.requireNonNull(oAuthAttributes), socialType);
+        User loadUser = getUser(oAuthAttributes, socialType);
 
+        // DefaultOAuth2User를 구현한 CustomOAuth2User 객체를 생성하여 반환
         return new CustomOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(loadUser.getSocialId())),
                 attributes,

@@ -11,11 +11,14 @@ import bbibig.bbibig.global.security.redis.RedisRefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -56,7 +59,7 @@ public class SecurityConfig {
             "/",
             "/favicon.ico",
             "/oauth2/**",
-            "/api/logout"
+            "/api/logout",
 
 
     };
@@ -70,6 +73,7 @@ public class SecurityConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource())) // cors 허용 설정
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 X -> 토큰 사용
                 .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 
                 // url 별 권한 설정
                 .authorizeHttpRequests(authorize -> authorize
@@ -80,14 +84,13 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler(oAuth2LoginFailureHandler)
-                        .redirectionEndpoint(redirectionEndpointConfig -> redirectionEndpointConfig
-                                .baseUri("/oauth2/*"))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)));
 
         // 스프링 시큐리티 필터 순서 :
         // LogoutFilter -> JwtAuthenticationProcessingFilter -> CustomJsonUsernamePasswordAuthenticationFilter
         // 아래 둘 순서 바꾸면 에러
+//        httpSecurity.addFilterAfter(,LogoutFilter.class);
         httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
@@ -107,8 +110,6 @@ public class SecurityConfig {
     }
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService, userRepository, redisRefreshTokenService);
-
-        return jwtAuthenticationFilter;
+        return new JwtAuthenticationFilter(jwtService, userRepository, redisRefreshTokenService);
     }
 }
