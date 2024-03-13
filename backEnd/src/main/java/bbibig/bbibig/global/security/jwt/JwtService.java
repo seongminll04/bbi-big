@@ -50,7 +50,7 @@ public class JwtService {
 
     private static final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
 
-    private static final String BEARER = "Bearer ";
+//    private static final String BEARER = "Bearer ";
 
     private final UserRepository userRepository;
 
@@ -64,7 +64,7 @@ public class JwtService {
         Date now = new Date();
 
         // 유저 존재 유무 확인
-        User user = userRepository.findBySocialIdAndSocialType(socialId,socialType)
+        userRepository.findBySocialIdAndSocialType(socialId,socialType)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
 
         // JWT 토큰 생성
@@ -88,7 +88,7 @@ public class JwtService {
     }
 
     /**
-     * AccessToken Header에 실어 보내기
+     * AccessToken Cookie에 실어 보내기
      */
     public void sendAccessCookie(HttpServletResponse httpServletResponse, String accessToken) {
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
@@ -97,7 +97,7 @@ public class JwtService {
     }
 
     /**
-     * AcessToken + RefreshToken Header에 실어 보내기
+     * AcessToken + RefreshToken Cookie에 실어 보내기
      */
     public void sendAccessAndRefreshToken(HttpServletResponse httpServletResponse,
                                           String accessToken, String refreshToken) {

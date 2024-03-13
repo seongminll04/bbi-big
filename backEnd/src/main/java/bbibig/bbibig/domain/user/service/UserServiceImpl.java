@@ -36,6 +36,7 @@ public class UserServiceImpl implements UserService {
         return GetMyDataResponseDto.builder()
                 .nickname(user.getNickname())
                 .profileImg(user.getImgUrl())
+                .tagNum(user.getId())
                 .build();
     }
 

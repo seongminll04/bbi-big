@@ -73,7 +73,10 @@ public class SecurityConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource())) // cors 허용 설정
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 X -> 토큰 사용
                 .headers(h->h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
+                // 인증 실패 시 리턴을 지정해줘야한다...
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 
                 // url 별 권한 설정
                 .authorizeHttpRequests(authorize -> authorize

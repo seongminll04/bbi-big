@@ -27,9 +27,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtService jwtService;
 
-    private String access = "";
-    private String refresh = "";
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                         Authentication authentication) throws IOException, ServletException {
@@ -53,9 +50,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         jwtService.sendAccessAndRefreshToken(httpServletResponse, accessToken, refreshToken);
         jwtService.updateRefreshToken(oAuth2User.getSocialType(),oAuth2User.getSocialId(), refreshToken);
-
-        access = accessToken;
-        refresh = refreshToken;
 
 
         // 로그인 후 이동할 주소

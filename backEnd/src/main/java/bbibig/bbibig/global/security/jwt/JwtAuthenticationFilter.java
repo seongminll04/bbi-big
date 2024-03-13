@@ -25,10 +25,8 @@ import java.util.Optional;
 /**
  * JWT 인증 필터
  * /login 이외의 API 요청 처리 필터
- *
  * AccessToken 만료 X => AccessToken만 헤더에 담아서 요청
  * AccessToken 만료 => RefreshToken, AccessToken 모두 헤더에 담아서 요청
- *
  * 1. RefreshToken X && AccessToken OK => 인증 성공, RefreshToken 재발급 X
  * 2. RefreshToken X && AccessToken X or InValid => 인증 실패, 403 ERROR
  * 3. RefreshToken O => 인증 실패 처리, Redis의 RefreshToken과 비교하여 일치 하면 AccessToken / RefreshToken 재발급 (RTR 방식)
@@ -47,25 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                     FilterChain filterChain) throws ServletException, IOException {
-
+        // AccessToken 검사 및 인증 처리
+        // AccessToken이 존재하지 않거나 유효하지 않다면 => 인증 객체가 담기지 않은 상태로 인증 실패(403)
+        // AccessToken이 유효하다면 => 인증 객체가 담긴 상태로 인증 성공
         checkAccessTokenAndAuthentication(httpServletRequest, httpServletResponse, filterChain);
-//        // 검증이 필요한 요청은 진행
-//        if(httpServletRequest.getRequestURI().equals("/api/refresh")) {
-//            // 요청 헤더에서 RefreshToken 추출 - 없거나 유효하지 않으면 null 반환
-//            String refreshToken = jwtService.extractRefreshToken(httpServletRequest)
-//                    .filter(jwtService::isTokenValid)
-//                    .orElse(null);
-//            // 요청 헤더에 RefreshToken이 존재한다면
-//            if(refreshToken != null)
-//                // 헤더의 RefreshToken과 Redis의 RefreshToken 비교 => 일치한다면 AccessToken 재발급
-//                checkRefreshTokenAndReIssueAccessToken(httpServletResponse, refreshToken);
-//        }
-//
-//        else
-//            // AccessToken 검사 및 인증 처리
-//            // AccessToken이 존재하지 않거나 유효하지 않다면 => 인증 객체가 담기지 않은 상태로 인증 실패(403)
-//            // AccessToken이 유효하다면 => 인증 객체가 담긴 상태로 인증 성공
-//            checkAccessTokenAndAuthentication(httpServletRequest, httpServletResponse, filterChain);
     }
     /**
      * AccessToken / RefreshToken 생성 및 재발급 메서드
@@ -80,17 +63,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SocialType socialType = SocialType.valueOf(parts[0]);
             String socialId = parts[1];
 
-            Optional<User> user = userRepository.findBySocialIdAndSocialType(socialId,socialType);
+            User user = userRepository.findBySocialIdAndSocialType(socialId,socialType)
+                    .orElseThrow(()-> new NullPointerException("해당 유저가 존재하지 않습니다."));
+            String reIssuedRefreshToken = reIssueRefreshToken(user);
 
-            if(user.isPresent()) {
-                String reIssuedRefreshToken = reIssueRefreshToken(user.get());
+            jwtService.sendAccessAndRefreshToken(
+                    httpServletResponse,
+                    jwtService.createAccessToken(user.getSocialType(),user.getSocialId()),
+                    reIssuedRefreshToken
+            );
 
-                jwtService.sendAccessAndRefreshToken(
-                        httpServletResponse,
-                        jwtService.createAccessToken(user.get().getSocialType(),user.get().getSocialId()),
-                        reIssuedRefreshToken
-                );
-            }
+            saveAuthentication(user);
         }
         else
             throw new NullPointerException("Redis에 해당 RefreshToken이 존재하지 않습니다.");
@@ -115,25 +98,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // AccessToken 추출
         jwtService.extractAccessToken(httpServletRequest)
-                .ifPresent(accessToken -> {
+                .ifPresentOrElse(accessToken -> {
+                    // AccessToken이 존재할 경우
                     if (jwtService.isTokenValid(accessToken)) {
                         // AccessToken이 유효한 경우 id(Claim) 추출
                         jwtService.extractId(accessToken)
-                                .ifPresent(id ->{
-                                        String[] parts = id.split("@");
-                                        SocialType socialType = SocialType.valueOf(parts[0]);
-                                        String socialId = parts[1];
-                                        userRepository.findBySocialIdAndSocialType(socialId, socialType)
-                                                .ifPresent(this::saveAuthentication);
+                                .ifPresent(id -> {
+                                    String[] parts = id.split("@");
+                                    SocialType socialType = SocialType.valueOf(parts[0]);
+                                    String socialId = parts[1];
+                                    userRepository.findBySocialIdAndSocialType(socialId, socialType)
+                                            .ifPresent(this::saveAuthentication);
                                 });
                     } else {
                         // AccessToken이 유효하지 않은 경우, 예외를 던집니다.
                         jwtService.deleteCookie(httpServletResponse);
                         throw new RuntimeException("해당 토큰은 유효하지 않습니다.");
                     }
-                });
+                },
+                // AccessToken이 존재하지 않을 경우 동작
+                () -> jwtService.extractRefreshToken(httpServletRequest)
+                        // RefreshToken이 존재할 경우
+                        .ifPresent(refreshToken -> {
+                            checkRefreshTokenAndReIssueAccessToken(httpServletResponse,refreshToken);
+                        }));
 
-        ;
         // 필터에서의 처리를 마치고 다음 필터 또는 서블릿으로 요청을 전달하는 역할, 필터 체인의 다음 단계에서 추가적인 처리가 가능
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }

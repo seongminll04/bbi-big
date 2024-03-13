@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @ApiOperation(value = "로그아웃")
-    @PostMapping("/logout")
+    @DeleteMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse httpServletResponse) {
         userService.logout(httpServletResponse);
         return ResponseEntity.ok().body("");
