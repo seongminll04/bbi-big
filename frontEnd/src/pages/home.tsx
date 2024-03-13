@@ -1,70 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppState } from '../store/state';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { setLogin } from '../store/actions';
+import { setLogin, setModal } from '../store/actions';
 import styles from './home.module.css';
-import { CgArrowsExchangeAlt } from "react-icons/cg";
-import { IoIosOptions } from "react-icons/io";
+
+import MyProfile from './components/home/myprofile';
+import MyList from './components/home/mylist';
+import ModalOpen from './modalopen';
+
+import make_img from '../assets/images/make_server.png';
+import search_img from '../assets/images/search_server.png';
 
 function Home() {
   const isLogin = useSelector((state: AppState) => state.isLogin);
+  const isModalOpen = useSelector((state: AppState) => state.isModalOpen != null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [nowList, setNowList] = useState('서버')
 
-  const listSwap = () => {
-    if (nowList ==='서버') {
-      setNowList('친구')
-    }
-    else {
-      setNowList('서버')
-    }
-  }
 
   useEffect(()=>{
     if (!isLogin) {
       axios({
         method:'get',
-        url:'http://localhost:8081/api/getMyData',
+        url:process.env.REACT_APP_BACKEND_URL+'/getMyData',
         withCredentials: true
       }).then(res => {
         dispatch(setLogin(res.data));
-        console.log(res.data);
+        if (!res.data.nickname) {
+          dispatch(setModal('첫 로그인'));
+        }
       }).catch(() => {
         navigate('/login');
       })
+    }
+    else {
+      if (!isLogin.nickname) {
+        dispatch(setModal('첫 로그인'));
+      }
     }
   },[isLogin, dispatch, navigate])
 
   return (
     <div className={styles.container}>
+      {isModalOpen && <ModalOpen />}
+      {isLogin?.nickname && 
+      <>
       <div className={styles.side_container}>
-        <div className={styles.listswap}>
-          <div className={styles.swap}>
-            <CgArrowsExchangeAlt width={35} onClick={()=>{listSwap()}}/>
-            <p className={styles.drag} style={{margin:0}}>{nowList} 리스트</p>
-            <p style={{width:35}}></p>
-          </div>
-        </div>
-        <div className={styles.listbox}>
-
-        </div>
-        <div className={styles.myprofile}>
-          <img src={isLogin?.profileImg ? isLogin?.profileImg : ''} alt="" className={styles.profileImg} />
-          <div className={styles.nickname}>
-            <p style={{margin:0}}>1234</p>
-            <p style={{margin:0}}>adfs</p>
-            <span>asdf</span>
-          </div>
-          <IoIosOptions className={styles.settingIcon} />
-        </div>
+        <MyList />
+        <MyProfile />
       </div>
       <main className={styles.main_container}>
-
-
+        <div className={styles.sub_box} onClick={()=>{dispatch(setModal("서버만들기"))}}>
+          <img src={make_img} alt="" />
+          <h1>서버를 만들어볼까요?</h1>
+        </div>
+        <div className={styles.sub_box} onClick={()=>{dispatch(setModal("서버검색"))}}>
+          <img src={search_img} alt="" />
+          <h1>서버를 검색하여 가입</h1>
+        </div>
       </main>
+      </>
+      }
     </div>
   );
 }

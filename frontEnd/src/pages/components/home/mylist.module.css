@@ -1,0 +1,56 @@
+.container {
+    width: 100%;
+    height: 92%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.listswap {
+    width: 90%;
+    height: 5%;
+    margin: 5%;
+    box-sizing: border-box;
+    border-radius: 1rem;
+    background-color: #7F7B98;
+    color:#D2CDE7;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    cursor: pointer;
+}
+
+.listswap:hover .swapButton {
+    color:rgb(188, 188, 188);
+}
+
+.listswap:active .swapButton {
+    transform: scaleX(-1);
+}
+
+.swapButton {
+    width: 30px;
+    height: 30px;
+    transition: 300ms all ease-in;
+}
+
+.swap {
+    transform: scaleX(-1);
+}
+
+
+.listbox {
+    height:95%;
+}
+
+p {
+    /* 드래그 금지 css */
+    -webkit-user-select: none; /* Chrome, Safari, Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* CSS3 */
+    margin:0;
+}

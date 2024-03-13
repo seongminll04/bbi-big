@@ -1,0 +1,60 @@
+.container {
+    height: 8%;
+    width: 100%;
+    background-color: #5D5674;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 5% 0;
+    box-sizing: border-box;
+    color: #D2CDE7;
+}
+
+.profileImg {
+    border-radius: 50% ;
+    width: 25%;
+    padding: 0 10px;
+    box-sizing: border-box;
+
+    /* 드래그 금지 css */
+    -webkit-user-select: none; /* Chrome, Safari, Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* CSS3 */
+}
+
+.userdata {
+    width: 60%;
+    text-align: start;
+    box-sizing: border-box;
+}
+
+p {
+    
+    margin:0;
+}
+
+.nickname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settingIcon {
+    width: 15%;
+    padding:0 5%;
+    height: 50%;
+    min-width: 20px;
+    min-height: 30px;
+    cursor: pointer;
+}
+
+.settingIcon:hover {
+    color:rgb(192, 192, 192);
+}
+
+.settingIcon:active {
+    color:gray;
+}

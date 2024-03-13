@@ -1,15 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from './login.module.css';
 
 import logo from '../assets/images/logo with name.png';
 import kakao_logo from '../assets/images/kakao_logo.png';
 import naver_logo from '../assets/images/naver_logo.png';
 import google_logo from '../assets/images/google_logo.png';
+import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppState } from '../store/state';
+import { useNavigate } from 'react-router-dom';
+import { setLogin } from '../store/actions';
 
 function Login() {
+    const isLogin = useSelector((state: AppState) => state.isLogin);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const login = (social:string) => {
         window.location.href = `http://localhost:8081/oauth2/authorization/${social}`
     }
+    useEffect(()=>{
+        if (!isLogin) {
+          axios({
+            method:'get',
+            url:process.env.REACT_APP_BACKEND_URL+'/getMyData',
+            withCredentials: true
+          }).then(res => {
+            dispatch(setLogin(res.data));
+            navigate('/')
+          }).catch(() => {
+            console.log('로그인 X 상태')
+          })
+        } 
+        else {
+            navigate('/')
+        }
+      },[isLogin, dispatch, navigate])
 
     return (
         <div className={styles.container}>
