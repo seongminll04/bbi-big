@@ -1,5 +1,7 @@
 package bbibig.bbibig.domain.user.entity;
 
+import bbibig.bbibig.domain.chat.entity.Chat;
+import bbibig.bbibig.domain.server.entity.GroupServer;
 import bbibig.bbibig.domain.user.model.SocialType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,18 +9,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_idx")
+    @Column(name = "idx")
     protected Long id;
 
     @Enumerated(EnumType.STRING)
@@ -37,8 +40,15 @@ public class User {
     @Column(name = "user_alarm")
     private Boolean alarm;
 
+    // 조인 엔티티와의 One-to-Many 관계 설정
     @OneToMany(mappedBy = "user")
-    private List<Friendship> friendships = new ArrayList<>();
+    private Set<UserServer> userServers = new HashSet<>();
+
+    @OneToMany(mappedBy = "sender")
+    private Set<Chat> sendChats = new HashSet<>();
+
+    @OneToMany(mappedBy = "admin")
+    private Set<GroupServer> admin = new HashSet<>();
 
     @Builder
     public User(SocialType socialType, String socialId, String imgUrl){
@@ -70,10 +80,4 @@ public class User {
         this.imgUrl=imgPath;
     }
 
-    /**
-     * 비밀번호 암호화
-     */
-//    public void passwordEncode(PasswordEncoder passwordEncoder) {
-//        this.password = passwordEncoder.encode(this.password);
-//    }
 }
