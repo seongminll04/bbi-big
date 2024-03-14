@@ -7,7 +7,7 @@ import { IoMdInformationCircleOutline, IoMdClose, IoMdCheckmark } from "react-ic
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setModal, updateNickname } from '../../../store/actions';
+import { setLogin, setModal, updateNickname } from '../../../store/actions';
 
 function FirstLogin() {
   const navigate = useNavigate();
@@ -37,7 +37,9 @@ function FirstLogin() {
       withCredentials:true
     }).then(res=>{
       console.log(res.data)
+      dispatch(setLogin(null))
       navigate('/login')
+      
     }).catch(err=>{
       console.log(err)
     })

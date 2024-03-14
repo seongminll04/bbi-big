@@ -1,0 +1,15 @@
+.container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* div의 정중앙을 위치 기준으로 잡아줌 */
+
+    background-color: #2D2A3E;
+    padding: 20px;
+    border-radius: 1rem;
+    z-index: 1001; /* 모달 오버레이 위에 표시되도록 z-index 설정 */
+    width: 70%; 
+    height: 80%; 
+
+    color:#FEFEFE;
+}
