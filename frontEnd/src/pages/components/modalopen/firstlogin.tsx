@@ -33,7 +33,7 @@ function FirstLogin() {
   const logout = () => {
     axios({
       method:'delete',
-      url:process.env.REACT_APP_BACKEND_URL + '/logout',
+      url:process.env.REACT_APP_BACKEND_URL + '/user/logout',
       withCredentials:true
     }).then(res=>{
       console.log(res.data)
@@ -47,8 +47,8 @@ function FirstLogin() {
 
   const nicknameRegist = () => {
     axios({
-      method:'post',
-      url:process.env.REACT_APP_BACKEND_URL + '/changeNickname',
+      method:'patch',
+      url:process.env.REACT_APP_BACKEND_URL + '/user/nickname',
       data:{
         nickname:nickname
       },

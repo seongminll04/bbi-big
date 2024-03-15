@@ -24,7 +24,7 @@ function Home() {
     if (!isLogin) {
       axios({
         method:'get',
-        url:process.env.REACT_APP_BACKEND_URL+'/getMyData',
+        url:process.env.REACT_APP_BACKEND_URL+'user/mydata',
         withCredentials: true
       }).then(res => {
         dispatch(setLogin(res.data));
