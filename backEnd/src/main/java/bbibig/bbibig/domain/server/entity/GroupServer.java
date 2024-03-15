@@ -21,26 +21,33 @@ public class GroupServer extends Server {
     @Column(name = "server_name")
     private String serverName;
 
-    @Column(name = "server_Img")
+    @Column(name = "serverImg")
     private String serverImg;
 
-    @Column(name = "server_regist")
-    private Boolean serverRegist;
+    @Column(name = "joinMethod")
+    private Boolean joinMethod;
 
-    @Column(name = "server_search")
-    private Boolean serverSearch;
+    @Column(name = "searchOpen")
+    private Boolean searchOpen;
 
     @ManyToOne
     private User admin;
 
     @Builder
-    public GroupServer (String serverName, String serverImg, Boolean serverRegist, Boolean serverSearch, User admin) {
+    public GroupServer (String serverName, Boolean joinMethod, Boolean searchOpen, User admin) {
         this.serverName=serverName;
-        this.serverImg=serverImg;
-        this.serverRegist=serverRegist;
-        this.serverSearch=serverSearch;
+        this.joinMethod=joinMethod;
+        this.searchOpen=searchOpen;
         this.admin=admin;
         this.addUser(admin);
+    }
+
+
+    /**
+     * 서버 이미지 변경
+     */
+    public void updateServerImg(String serverImg) {
+        this.serverImg = serverImg;
     }
 
 
