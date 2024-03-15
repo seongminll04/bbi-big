@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @ApiOperation(value = "닉네임 수정")
-    @PostMapping("/nickname")
+    @PatchMapping("/nickname")
     public ResponseEntity<?> ChangeNickname(@RequestBody ChangeNicknameRequestDto changeNicknameRequestDto,
                                          @AuthenticationPrincipal UserDetails userDetails) throws Exception {
         return ResponseEntity.ok().body(userService.changeNickname(changeNicknameRequestDto.getNickname(), userDetails));
