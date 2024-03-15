@@ -15,6 +15,8 @@ function CreateServer() {
 
   return (
     <div className={styles.container}>
+      <p>서버 만들기</p>
+      <img className={styles.serverImg} src="" alt="" />
       <button onClick={handleCreateServer}>서버 생성</button>
       <button onClick={modalClose}>취소</button>
     </div>

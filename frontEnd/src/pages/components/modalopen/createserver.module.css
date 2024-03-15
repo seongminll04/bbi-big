@@ -13,3 +13,10 @@
 
     color:#FEFEFE;
 }
+
+.serverImg {
+    border-radius: 50% ;
+    width: 25%;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
