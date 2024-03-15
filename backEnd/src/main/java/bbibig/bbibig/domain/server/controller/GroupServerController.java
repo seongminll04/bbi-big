@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/groupserver")
+@RequestMapping("/api/server")
 @Slf4j
 public class GroupServerController {
     private final GroupServerService groupServerService;
 
     @ApiOperation(value = "서버 만들기")
-    @PostMapping("/createServer")
-    public ResponseEntity<?> getMyData(@Valid @RequestBody CreateServerRequestDto createServerRequestDto,
+    @PostMapping("/create")
+    public ResponseEntity<?> CreateServer(@Valid @RequestBody CreateServerRequestDto createServerRequestDto,
                                        @AuthenticationPrincipal UserDetails userDetails) {
         groupServerService.createServer(createServerRequestDto,userDetails);
         return ResponseEntity.ok().body("생성완료");

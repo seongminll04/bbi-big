@@ -13,26 +13,26 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/user")
 @Slf4j
 public class UserController {
     private final UserService userService;
     @ApiOperation(value = "내 정보 조회")
-    @GetMapping("/getMyData")
-    public ResponseEntity<?> getMyData(@AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/mydata")
+    public ResponseEntity<?> GetMyData(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok().body(userService.getMyData(userDetails));
     }
 
     @ApiOperation(value = "닉네임 수정")
-    @PostMapping("/changeNickname")
-    public ResponseEntity<?> changeNickname(@RequestBody ChangeNicknameRequestDto changeNicknameRequestDto,
+    @PostMapping("/nickname")
+    public ResponseEntity<?> ChangeNickname(@RequestBody ChangeNicknameRequestDto changeNicknameRequestDto,
                                          @AuthenticationPrincipal UserDetails userDetails) throws Exception {
         return ResponseEntity.ok().body(userService.changeNickname(changeNicknameRequestDto.getNickname(), userDetails));
     }
 
     @ApiOperation(value = "로그아웃")
     @DeleteMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> Logout(HttpServletResponse httpServletResponse) {
         userService.logout(httpServletResponse);
         return ResponseEntity.ok().body("");
     }

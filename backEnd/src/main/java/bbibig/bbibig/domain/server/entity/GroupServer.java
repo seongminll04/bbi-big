@@ -40,6 +40,7 @@ public class GroupServer extends Server {
         this.serverRegist=serverRegist;
         this.serverSearch=serverSearch;
         this.admin=admin;
+        this.addUser(admin);
     }
 
 

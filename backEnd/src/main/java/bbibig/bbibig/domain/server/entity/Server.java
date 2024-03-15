@@ -26,20 +26,18 @@ public abstract class Server {
     protected Long id;
 
     // 서버와 유저 간의 One-to-Many 관계 설정
-    @OneToMany(mappedBy = "server")
+    @OneToMany(mappedBy = "server", cascade = CascadeType.PERSIST)
     private Set<UserServer> userServers = new HashSet<>();
 
-    @OneToMany(mappedBy = "server")
+    @OneToMany(mappedBy = "server", cascade = CascadeType.PERSIST)
     private Set<Chat> sendChats = new HashSet<>();
 
-    /**
-     * 서버에 유저 추가
-     */
+    // userServer를 만들어서 연결해주는 코드
+    // user와 server의 연결 관계
     public void addUser(User user) {
         UserServer userServer = new UserServer(user, this);
-        userServers.add(userServer);
         user.getUserServers().add(userServer);
+        this.getUserServers().add(userServer);
     }
-
 
 }

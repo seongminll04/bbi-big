@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,7 +28,6 @@ public class GroupServerServiceImpl implements GroupServerService{
     private final UserRepository userRepository;
 
     private final GroupServerRepository groupServerRepository;
-    private final UserServerRepository userServerRepository;
     /**
      * 서버 만들기
      */
@@ -43,12 +45,8 @@ public class GroupServerServiceImpl implements GroupServerService{
                 .serverSearch(createServerRequestDto.getServerSearch())
                 .admin(user)
                 .build();
-        GroupServer createdServer = groupServerRepository.save(groupServer);
 
-        UserServer userServer = UserServer.builder()
-                .user(user)
-                .server(createdServer)
-                .build();
-        userServerRepository.save(userServer);
+        groupServerRepository.save(groupServer);
     }
+
 }
